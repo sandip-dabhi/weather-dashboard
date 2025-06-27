@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1e3c72;
+      background-image: linear-gradient(315deg, #1e3c72 0%, #2a5298 74%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+    }
+
+    .card {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      width: 400px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .card h2 {
+      margin-bottom: 5px;
+    }
+
+    .main-temp {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+    }
+
+    .details {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .forecast {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 15px;
+    }
+
+    .day {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .day img {
+      width: 35px;
+      height: 35px;
+    }
+
+    input, button {
+      margin: 10px auto;
+      padding: 10px;
+      width: 90%;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input {
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #ff7e5f;
+      color: white;
+      cursor: pointer;
+    }
+
+    .error {
+      color: yellow;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button id="btn1">Get Weather</button>
+
+    <h2 id="cityName">--</h2>
+    <img id="weatherIcon" class="icon" src="" alt="Weather Icon" style="display: none;" />
+    <div class="main-temp" id="temp">--°C</div>
+    <div id="condition">--</div>
+
+    <div class="details">
+      <div>Wind: <span id="wind">--</span> km/h</div>
+      <div>Humidity: <span id="humidity">--</span>%</div>
+      <div>Pressure: <span id="pressure">--</span> hPa</div>
+    </div>
+
+    <div class="forecast" id="forecast">
+      <!-- Static Forecast -->
+      <div class="day">
+        <div>MON</div>
+        <img src="https://cdn.weatherapi.com/weather/64x64/day/116.png" />
+        <div>21.0°C</div>
+      </div>
+      <div class="day">
+        <div>TUE</div>
+        <img src="https://cdn.weatherapi.com/weather/64x64/day/113.png" />
+        <div>23.3°C</div>
+      </div>
+      <div class="day">
+        <div>WED</div>
+        <img src="https://cdn.weatherapi.com/weather/64x64/day/296.png" />
+        <div>27.8°C</div>
+      </div>
+      <div class="day">
+        <div>THU</div>
+        <img src="https://cdn.weatherapi.com/weather/64x64/day/389.png" />
+        <div>31.3°C</div>
+      </div>
+      <div class="day">
+        <div>FRI</div>
+        <img src="https://cdn.weatherapi.com/weather/64x64/day/119.png" />
+        <div>17.0°C</div>
+      </div>
+    </div>
+
+    <p class="error" id="errorMessage"></p>
+  </div>
+
+  <script>
+    const btn1 = document.getElementById("btn1");
+
+    btn1.addEventListener("click", () => {
+      const city = document.getElementById('cityInput').value.trim();
+      const API_KEY = '96a5ff2c5b62bae73712d1206235b409';
+
+      if (!city) {
+        document.getElementById("errorMessage").innerText = "Please enter a city name.";
+        return;
+      }
+
+      // Step 1: Get coordinates from city
+      const geoURL = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`;
+
+      fetch(geoURL)
+        .then(res => res.json())
+        .then(locData => {
+          if (!locData.length) throw new Error("City not found");
+
+          const { lat, lon, name, country } = locData[0];
+
+          // Step 2: Get weather from coordinates
+          const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+
+          return fetch(weatherURL).then(res => res.json()).then(data => {
+            const tempC = (data.main.temp - 273.15).toFixed(1);
+            const iconCode = data.weather[0].icon;
+            const iconURL = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+            document.getElementById("cityName").innerText = `${name}, ${country}`;
+            document.getElementById("temp").innerText = `${tempC}°C`;
+            document.getElementById("condition").innerText = data.weather[0].description;
+            document.getElementById("humidity").innerText = data.main.humidity;
+            document.getElementById("pressure").innerText = data.main.pressure;
+            document.getElementById("wind").innerText = data.wind.speed;
+            document.getElementById("weatherIcon").src = iconURL;
+            document.getElementById("weatherIcon").style.display = "block";
+            document.getElementById("errorMessage").innerText = "";
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("errorMessage").innerText = "City not found or API error.";
+        });
+    });
+  </script>
+</body>
+</html>
