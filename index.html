@@ -406,7 +406,6 @@
           <div class="temp">${temp}°C</div>
           <div class="condition">${forecast.weather[0].description}</div>
         `;
-        
         forecastContainer.appendChild(forecastElement);
       }
     }
@@ -472,7 +471,6 @@
         errorMessage.style.display = 'block';
         return;
       }
-      
       getWeatherData(city);
     });
     
